@@ -1,112 +1,113 @@
 import streamlit as st
 import pdfplumber
-from groq import Groq, GroqError
 from fpdf import FPDF
-import os
+import groq
+from groq import Groq
+import time
+from assessment import display_assessment
 
-# Function to extract text from PDF
+# Function to extract text from PDF (only first 5 lines for speed)
 def extract_text_from_pdf(pdf_file):
-    text = ""
     with pdfplumber.open(pdf_file) as pdf:
-        for page in pdf.pages:
-            extracted_text = page.extract_text()
-            if extracted_text:
-                text += extracted_text + "\n"
-    return text.strip()
+        first_page = pdf.pages[0]
+        extracted_text = first_page.extract_text()
+        if extracted_text:
+            return "\n".join(extracted_text.split("\n")[:5])  # Extract first 5 lines
+    return ""
 
-# Function to generate questions using Groq API
+# Function to generate questions efficiently
 def generate_questions(text):
-    prompt = f"Generate a list of 15 quiz questions from the following content:\n\n{text}"
+    shortened_text = text[:50]  # Reduce API input size for speed
+    prompt = f"""Generate 5 multiple-choice questions from this text. 
+    Each question should have 4 options (A, B, C, D).
+    Do NOT include the correct answer.
+    Format:
     
-    # Split the content into smaller chunks if it exceeds the token limit
-    max_chunk_size = 6000
-    chunks = [text[i:i+max_chunk_size] for i in range(0, len(text), max_chunk_size)]
+    Question: [question text]
+    A) [option]
+    B) [option]
+    C) [option]
+    D) [option]
     
-    # Initialize the Groq client with your API key
+    Text: {shortened_text}
+    """
+
     try:
-        client = Groq(api_key="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")  # Replace with your Groq API key
-    except GroqError as e:
-        st.error(f"Error initializing Groq client: {str(e)}")
-        return None
+        client = Groq(api_key="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")  # Replace with your API key
+        completion = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.5,  # Reduce randomness for faster response
+            max_tokens=150,  # Reduce max tokens to speed up processing
+            stream=False
+        )
+        return completion.choices[0].message.content
 
-    question_bank = ""
+    except groq.GroqError as e:
+        if "rate_limit_exceeded" in str(e):
+            time.sleep(10)  # Wait 10 seconds before retrying
+            return generate_questions(shortened_text)  # Retry with same text
+        return f"Error: {str(e)}"
 
-    # Process each chunk separately
-    for chunk in chunks:
-        try:
-            # Make the API call to generate questions for each chunk
-            completion = client.chat.completions.create(
-                model="llama-3.3-70b-versatile",  # Use the correct model name
-                messages=[{"role": "system", "content": "You are an AI that creates educational quizzes."},
-                          {"role": "user", "content": f"Generate a list of quiz questions from the following content:\n\n{chunk}"}],
-                temperature=0.7,
-                max_completion_tokens=1000,
-                top_p=1,
-                stream=True
-            )
-
-            # Process the streamed response
-            for chunk_response in completion:
-                question_bank += chunk_response.choices[0].delta.content or ""
-
-        except Exception as e:
-            st.error(f"Error generating questions: {str(e)}")
-            return None
-
-    return question_bank
-
-# Function to create a downloadable PDF of questions
-def create_pdf(question_text):
+# Function to create a PDF with the generated questions
+def create_pdf(questions):
     pdf = FPDF()
-    pdf.set_auto_page_break(auto=True, margin=15)
     pdf.add_page()
     pdf.set_font("Arial", size=12)
-    pdf.multi_cell(0, 10, question_text)
-    
-    pdf_path = "generated_question_bank.pdf"
-    pdf.output(pdf_path)
+    pdf.multi_cell(190, 8, questions)  # Optimized layout
+    pdf_path = "generated_questions.pdf"
+    pdf.output(pdf_path, "F")  # Faster saving
     return pdf_path
 
-# Streamlit UI
-st.title("📚 Upload Learning Material ")
-st.write("Upload a textbook or chapter, and AI will generate a question bank.")
+# Initialize session state
+st.session_state.setdefault('questions', None)
+st.session_state.setdefault('is_assessment_started', False)
+st.session_state.setdefault('questions_text', "")
+st.session_state.setdefault('text_content', "")
 
-# File uploader
-uploaded_file = st.file_uploader("Upload PDF", type=["pdf"])
+# Main App
+if not st.session_state.is_assessment_started:
+    st.title("📚 Quiz Generator")
 
-if uploaded_file:
-    with st.spinner("Extracting content from PDF..."):
-        text_content = extract_text_from_pdf(uploaded_file)
-    
-    if text_content:
-        st.success("Text extracted successfully! Generating questions...")
+    uploaded_file = st.file_uploader("Upload PDF (First Page Only)", type=["pdf"])
 
-        with st.spinner("Generating AI-powered question bank..."):
-            question_bank = generate_questions(text_content)
+    if uploaded_file:
+        with st.spinner("Processing..."):
+            if not st.session_state.text_content:
+                st.session_state.text_content = extract_text_from_pdf(uploaded_file)
 
-        if question_bank:
-            st.text_area("Generated Question Bank", question_bank, height=300)
+            if st.session_state.text_content:
+                # Generate questions if not already generated
+                if not st.session_state.questions:
+                    st.session_state.questions = generate_questions(st.session_state.text_content)
+                    st.session_state.questions_text = st.session_state.questions
+                
+                questions = st.session_state.questions
 
-            # Save as PDF
-            pdf_path = create_pdf(question_bank)
+                if questions and "Error" not in questions:
+                    st.text_area("Generated Questions", questions, height=300)
 
-            # Layout with columns
-            col1,col2 = st.columns(2)
-            # Download Button
-            with col1:
-                with open(pdf_path, "rb") as file:
-                    st.download_button(
-                        label="📥 Download Question Bank",
-                        data=file,
-                        file_name="Adaptify_Question_Bank.pdf",
-                        mime="application/pdf",
-                        use_container_width=True  # Ensures the button spans the entire column width
-            )
-        # Start Adaptive Assessment
-            with col2:
-                if st.button("🚀 Start Assessment", key="assessment_button", use_container_width=True):
-                    st.session_state['questions'] = question_bank.split("\n")  # Store questions for assessment page
-                    st.switch_page("assessment.py")  # Redirect to assessment page
+                    # Two columns for buttons
+                    col1, col2 = st.columns(2)
 
+                    with col1:
+                        pdf_path = create_pdf(questions)
+                        with open(pdf_path, "rb") as file:
+                            st.download_button(
+                                label="📥 Download Questions",
+                                data=file,
+                                file_name="quiz_questions.pdf",
+                                mime="application/pdf",
+                                use_container_width=True
+                            )
+
+                    with col2:
+                        if st.button("🚀 Start Assessment", use_container_width=True):
+                            st.session_state.is_assessment_started = True
+                            st.rerun()
+                else:
+                    st.error(questions)
     else:
-        st.error("Failed to extract text from the PDF. Please upload a valid document.")
+        st.write("Please upload a PDF file to get started.")
+else:
+    display_assessment(st.session_state.questions_text)

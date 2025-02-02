@@ -8,144 +8,16 @@ st.set_page_config(page_title="ADAPTIFY", page_icon="🎓", layout="wide")
 st.markdown(
     """
     <style>
-        /* Global Styles */
-        .stApp {
-            background-color: #e6f3ff;
-        }
-        
-        /* Hero Section Styles */
-        .hero-container {
-            text-align: center;
-            padding: 40px 20px;
-            background: linear-gradient(160deg, #ffffff 60%, #e6f3ff 40%);
-            border-radius: 20px;
-            margin-bottom: 40px;
-        }
-        
-        .main-title {
-            font-size: 64px;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 20px;
-            font-family: 'Audrey', sans-serif;
-            text-align: center;
-        }
-        
-        .tagline {
-            font-size: 28px;
-            color: #34495e;
-            margin-bottom: 30px;
-            font-family: 'Helvetica Neue', sans-serif;
-            line-height: 1.4;
-        }
-        
-        /* Overview Section Styles */
-        .overview-box {
-            background-color: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            margin: 20px 0;
-        }
-        
-        .overview-title {
-            font-size: 24px;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 15px;
-        }
-        
-        .overview-text {
-            font-size: 18px;
-            color: #34495e;
-            line-height: 1.6;
-        }
-        
-        /* CTA Button Styles */
         .cta-button {
-            display: inline-block;
-            background: linear-gradient(30deg, #3498db, #2980b9);
-            color: white !important; /* Ensure text color is white */
-            padding: 15px 40px;
-            border-radius: 30px;
-            font-size: 20px;
-            font-weight: bold;
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
             text-decoration: none;
-            margin: 20px 0;
-            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
-            transition: transform 0.3s ease;
-        }
-        
-        .cta-button:hover {
-            transform: translateY(-2px);
-        }
-        
-        /* Feature Box Styles */
-        .feature-box {
-            background-color: white;
-            padding: 25px;
-            border-radius: 15px;
-            text-align: center;
-            margin: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            height: 100%;
-        }
-        
-        .feature-icon {
-            font-size: 40px;
-            margin-bottom: 15px;
-        }
-        
-        /* Subscription Plan Styles */
-        .plan-box {
-            background-color: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            margin: 20px 0;
-            text-align: center;
-        }
-        
-        .plan-title {
-            font-size: 24px;
-            font-weight: bold;
-            color: #2c3e50;
-            margin-bottom: 20px;
-        }
-        
-        .plan-price {
-            font-size: 32px;
-            font-weight: bold;
-            color: #3498db;
-            margin-bottom: 20px;
-        }
-        
-        .plan-features {
-            list-style-type: none;
-            padding: 0;
-            margin-bottom: 20px;
-            text-align: left;
-        }
-        
-        .plan-features li {
             font-size: 16px;
-            color: #34495e;
-            margin-bottom: 10px;
         }
-
-        /* Footer Styles */
-        .footer {
-            text-align: center;
-            padding: 20px;
-            background-color: #e6f3ff;
-            margin-top: 40px;
-            border-top: 1px solid #ccc;
-        }
-        
-        .footer p {
-            margin: 5px 0;
-            color: #34495e;
-            font-size: 14px;
+        .cta-button:hover {
+            background-color: #2980b9;
         }
     </style>
     """,
@@ -155,11 +27,8 @@ st.markdown(
 # Hero Section
 st.markdown(
     """
-    <div class="hero-container">
-        <h1 class="main-title">ADAPTIFY</h1>
-        <p class="tagline">Revolutionize Your Learning Journey with AI-Powered Assessments</p>
-        <a href="#" class="cta-button">Start Your Assessment</a>
-    </div>
+    <h1 style="text-align: center; color: #2c3e50;">Welcome to Adaptify</h1>
+    <p style="text-align: center; color: #34495e;">Transform the way you learn with personalized assessments and insights.</p>
     """,
     unsafe_allow_html=True
 )
@@ -170,14 +39,8 @@ col1, col2 = st.columns([6, 4])
 with col1:
     st.markdown(
         """
-        <div class="overview-box">
-            <h2 class="overview-title">Transform Your Educational Experience</h2>
-            <p class="overview-text">
-                Adaptify uses cutting-edge AI technology to create personalized learning experiences 
-                that evolve with you. Our intelligent assessment system adapts in real-time to your 
-                unique learning style, ensuring optimal comprehension and retention.
-            </p>
-        </div>
+        <h2 style="color: #2c3e50;">Your Personalized Learning Journey</h2>
+        <p style="color: #34495e;">Adaptify helps you track and accelerate your learning with tailored assessments.</p>
         """,
         unsafe_allow_html=True
     )
@@ -185,7 +48,7 @@ with col1:
 with col2:
     # Image Section
     try:
-        st.image("flight.jpg", width=400)
+        st.image("image.jpg", width=400)
     except FileNotFoundError:
         st.warning("Please check if the image file exists in the correct location")
 
