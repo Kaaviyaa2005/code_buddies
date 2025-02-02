@@ -18,7 +18,7 @@ def extract_text_from_pdf(pdf_file):
 # Function to generate questions efficiently
 def generate_questions(text):
     shortened_text = text[:50]  # Reduce API input size for speed
-    prompt = f"""Generate 5 multiple-choice questions from this text. 
+    prompt = f"""Generate 10 multiple-choice questions from this text. 
     Each question should have 4 options (A, B, C, D).
     Do NOT include the correct answer.
     Format:
